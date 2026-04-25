@@ -2,30 +2,50 @@ name: Laravel CI
 
 on:
   push:
+    branches:
+      - main
+      - refactor/**
   pull_request:
+    branches:
+      - main
 
 jobs:
-  laravel:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.2
+          php-version: "8.4"
+          extensions: mbstring, pdo_sqlite
+          coverage: none
 
-      - name: Install Composer
-        run: composer install --no-interaction --prefer-dist
-
-      - name: Copy .env
+      - name: Copy environment
         run: cp .env.example .env
 
-      - name: Generate key
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Generate app key
         run: php artisan key:generate
 
-      # 🔥 INI BIAR NGGAK ERROR DULU
-      - name: Skip test
-        run: echo "No test yet"
+      - name: Prepare SQLite database
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+
+      - name: Run migrations
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Run tests
+        run: php artisan test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
