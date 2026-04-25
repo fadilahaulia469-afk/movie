@@ -14,7 +14,7 @@
         @yield('content')
       </div>
 
-      @include('partials.navbar')
+      @include('partials.footer')
     <script src="/bootstrap/bootstrap.bundle.min.js"></script>
   </body>
 </html>
